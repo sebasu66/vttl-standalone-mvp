@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GLB Debug Test</title>
+    <script src="playcanvas-stable.min.js"></script>
+</head>
+<body>
+    <canvas id="application"></canvas>
+    <div id="log"></div>
+    
+    <script>
+        function log(msg) {
+            console.log(msg);
+            document.getElementById('log').innerHTML += msg + '<br>';
+        }
+        
+        // Create PlayCanvas app
+        const canvas = document.getElementById('application');
+        const app = new pc.Application(canvas);
+        
+        app.start();
+        
+        // Create basic scene
+        const camera = new pc.Entity('camera');
+        camera.addComponent('camera');
+        camera.setPosition(2, 2, 2);
+        camera.lookAt(0, 0, 0);
+        app.root.addChild(camera);
+        
+        const light = new pc.Entity('light');
+        light.addComponent('light');
+        light.setPosition(1, 1, 1);
+        app.root.addChild(light);
+        
+        // Test GLB loading
+        log('Testing GLB loading...');
+        
+        const glbUrl = 'http://localhost:3001/files/3dmodels/cat.glb';
+        log('GLB URL: ' + glbUrl);
+        
+        // Test fetch first
+        fetch(glbUrl, { method: 'HEAD' })
+            .then(response => {
+                log('Fetch response: ' + response.status + ' ' + response.statusText);
+                log('Content-Type: ' + response.headers.get('content-type'));
+                
+                if (response.ok) {
+                    // Try loading with PlayCanvas
+                    log('Attempting PlayCanvas asset loading...');
+                    
+                    app.assets.loadFromUrl(glbUrl, 'container', (err, asset) => {
+                        if (err) {
+                            log('ERROR: PlayCanvas loading failed: ' + err.message);
+                            log('Error stack: ' + err.stack);
+                        } else {
+                            log('SUCCESS: GLB asset loaded!');
+                            log('Asset ID: ' + asset.id);
+                            log('Asset name: ' + asset.name);
+                            log('Asset type: ' + asset.type);
+                            log('Asset loaded: ' + asset.loaded);
+                            log('Asset resource: ' + !!asset.resource);
+                            
+                            // Try to create entity with model
+                            const entity = new pc.Entity('test-cat');
+                            entity.addComponent('model', {
+                                asset: asset
+                            });
+                            app.root.addChild(entity);
+                            log('Model entity created and added to scene');
+                        }
+                    });
+                } else {
+                    log('ERROR: GLB file not accessible');
+                }
+            })
+            .catch(err => {
+                log('ERROR: Fetch failed: ' + err.message);
+            });
+    </script>
+</body>
+</html>

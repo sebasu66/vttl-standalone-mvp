@@ -1,0 +1,65 @@
+🚀 Starting VTTL Development Environment (Simple)
+=================================================
+🔍 Checking for existing instances...
+🔒 Created lock file: .vttl_dev_simple.lock (PID: 681763)
+🧹 Performing final cleanup...
+🚀 Starting servers...
+1️⃣ Starting WebSocket server...
+[33m[nodemon] 3.1.10[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+2️⃣ Starting development server...
+🔌 Live reload WebSocket server on port 3002
+👁️  Watching for file changes...
+🚀 VTTL Dev Server v1.4.1-devmode starting...
+🌐 Dev server running on http://localhost:3003
+📁 Serving files from: /mnt/d/dev/editor-mcp-server/standalone-mvp
+🚀 VTTL Game Server v1.7.0-screenshot-override (2025-07-25T07:45:00Z)
+📦 Features: Refactored Architecture, Modular Classes
+📡 API routes configured
+WebSocket Server running on ws://localhost:8080
+📁 SceneFileWatcher initialized
+   Watching: /mnt/d/dev/editor-mcp-server/standalone-mvp/scene_state.json
+👀 File watcher active
+🎬 Loading initial scene state from file...
+🎭 Applying complete scene state...
+🧹 Cleared 0 entities from game state
+✅ All servers initialized successfully
+HTTP Server running on http://localhost:3001
+Serving client files from: /client/
+Serving multicam assets from: /
+🧹 Cleared existing entities
+⚠️  Failed to apply camera settings: this.websocketHandler.broadcastToClients is not a function
+✅ Created entity: big_red_cube
+✅ Applied scene state: 1 entities created, 0 errors
+✅ Initial scene state loaded
+
+✅ Servers started!
+📊 Status:
+   • WebSocket: ws://localhost:8080 (PID: 681820)
+   • Dev Server: http://localhost:3003 (PID: 681889)
+
+🌐 Opening browser...
+Please open: http://localhost:3003/client/
+
+✅ Development environment ready!
+💡 Edit files in client/ or server/ to see auto-reload
+🛑 Press Ctrl+C to stop
+💡 Development environment is running...
+   • Edit files in client/ or server/ to see auto-reload
+   • Check console logs for any issues
+🛑 Press Ctrl+C to stop all services
+❌ WebSocket server stopped unexpectedly!
+
+🛑 Stopping all services...
+   Stopping WebSocket server (PID: 681820)...
+   Stopping dev server (PID: 681889)...
+   Cleaning up nodemon processes...
+🛑 Dev server stopped
+
+🛑 Shutting down server...
+✅ Server shutdown complete
+🔓 Removed lock file
+✅ All services stopped successfully!

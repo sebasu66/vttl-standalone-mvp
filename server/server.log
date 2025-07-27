@@ -1,0 +1,12 @@
+
+> vttl-game-server@1.0.0 start
+> node server.js
+
+WebSocket Server running on ws://localhost:8080
+HTTP Server running on http://localhost:3001
+Serving client files from: /client/
+Serving multicam assets from: /
+Client connected
+Client disconnected
+Client connected
+Client disconnected

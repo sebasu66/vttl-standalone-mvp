@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover' />
+    <meta charset='utf-8'>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <title>VTTL + Multicam Integration</title>
+    <script src="playcanvas-stable.min.js"></script>
+    <script src="__settings__.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: Arial, sans-serif;
+        }
+        #vttl-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 300px;
+        }
+        .status {
+            color: #00ff00;
+        }
+        .error {
+            color: #ff0000;
+        }
+        .info {
+            color: #00aaff;
+        }
+        #canvas-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <div id="vttl-overlay">
+            <div><strong>🎮 VTTL + Multicam Integration</strong></div>
+            <div id="connection-status">⚠️ Connecting to VTTL server...</div>
+            <div id="scene-status">🎬 Loading multicam scene...</div>
+            <div class="info">📡 WebSocket: <span id="ws-status">Connecting...</span></div>
+            <div class="info">🎯 Entities: <span id="entity-count">0</span></div>
+        </div>
+    </div>
+
+    <!-- Load original multicam scripts -->
+    <script src="__modules__.js"></script>
+    <script src="__start__.js"></script>
+    
+    <!-- Add VTTL WebSocket integration -->
+    <script src="client/game-controller.js"></script>
+    <script>
+        // Override the multicam app to add VTTL integration
+        console.log('🎮 VTTL + Multicam Integration Starting...');
+        
+        // Status update functions
+        function updateStatus(elementId, message, className = '') {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.className = className;
+            }
+        }
+        
+        // Wait for multicam app to be ready
+        let checkAppInterval = setInterval(() => {
+            if (window.pc && window.pc.Application) {
+                clearInterval(checkAppInterval);
+                initializeVTTLIntegration();
+            }
+        }, 100);
+        
+        function initializeVTTLIntegration() {
+            console.log('🔗 Initializing VTTL integration with multicam...');
+            updateStatus('scene-status', '✅ Multicam scene loaded', 'status');
+            
+            try {
+                // Find the PlayCanvas app from multicam
+                const canvas = document.querySelector('canvas');
+                if (!canvas) {
+                    throw new Error('No canvas found from multicam');
+                }
+                
+                // Get the app instance (multicam should have created it)
+                const app = canvas.app || window.app;
+                if (!app) {
+                    throw new Error('No PlayCanvas app found');
+                }
+                
+                console.log('📱 Found multicam PlayCanvas app:', app);
+                
+                // Initialize VTTL game controller with the existing app
+                if (typeof gameController !== 'undefined') {
+                    gameController.setPlayCanvasApp(app);
+                    console.log('🎯 VTTL game controller integrated');
+                    
+                    // Set up WebSocket connection
+                    gameController.setupWebSocket();
+                    updateStatus('ws-status', 'Connected', 'status');
+                    updateStatus('connection-status', '✅ VTTL integration active', 'status');
+                    
+                    // Monitor entity count
+                    setInterval(() => {
+                        const entities = gameController.getEntityCount ? gameController.getEntityCount() : 0;
+                        updateStatus('entity-count', entities);
+                    }, 1000);
+                    
+                } else {
+                    throw new Error('Game controller not found');
+                }
+                
+            } catch (error) {
+                console.error('❌ VTTL integration failed:', error);
+                updateStatus('connection-status', '❌ Integration failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Hide overlay after 5 seconds if everything is working
+        setTimeout(() => {
+            const overlay = document.getElementById('vttl-overlay');
+            if (overlay && document.getElementById('ws-status').textContent === 'Connected') {
+                overlay.style.opacity = '0.3';
+            }
+        }, 5000);
+        
+        console.log('🚀 VTTL + Multicam integration script loaded');
+    </script>
+    
+    <script src="__loading__.js"></script>
+</body>
+</html>

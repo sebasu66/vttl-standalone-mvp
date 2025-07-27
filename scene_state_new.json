@@ -1,0 +1,63 @@
+{
+  "version": "1.0.0",
+  "last_modified": null,
+  "scene_settings": {
+    "name": "Updated Scene with Multiple Objects",
+    "camera": {
+      "position": [0, 8, 12],
+      "target": [0, 1, 0]
+    }
+  },
+  "entities": {
+    "big_red_cube": {
+      "name": "big_red_cube",
+      "template": "cube",
+      "position": [0, 1, 0],
+      "rotation": [0, 0, 0],
+      "scale": [3, 3, 3],
+      "properties": {
+        "color": [1, 0, 0]
+      }
+    },
+    "yellow_sphere": {
+      "name": "yellow_sphere",
+      "template": "sphere",
+      "position": [0, 5, 0],
+      "rotation": [0, 0, 0],
+      "scale": [1.5, 1.5, 1.5],
+      "properties": {
+        "color": [1, 1, 0]
+      }
+    },
+    "green_cylinder": {
+      "name": "green_cylinder",
+      "template": "cylinder",
+      "position": [6, 1.5, 0],
+      "rotation": [0, 0, 0],
+      "scale": [1, 3, 1],
+      "properties": {
+        "color": [0, 1, 0]
+      }
+    },
+    "blue_cube": {
+      "name": "blue_cube",
+      "template": "cube",
+      "position": [-6, 0.5, 0],
+      "rotation": [0, 45, 0],
+      "scale": [1, 1, 1],
+      "properties": {
+        "color": [0, 0.5, 1]
+      }
+    },
+    "purple_sphere": {
+      "name": "purple_sphere",
+      "template": "sphere",
+      "position": [3, 0.8, 3],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1],
+      "properties": {
+        "color": [0.8, 0, 0.8]
+      }
+    }
+  }
+}

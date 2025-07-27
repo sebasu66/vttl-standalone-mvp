@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Simple PlayCanvas Scene Loader</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            background: #000; 
+            font-family: Arial, sans-serif; 
+        }
+        canvas { 
+            display: block; 
+            width: 100vw; 
+            height: 100vh; 
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h3>PlayCanvas Scene Loader</h3>
+        <div id="status">Loading...</div>
+    </div>
+    
+    <canvas id="application-canvas"></canvas>
+    
+    <script src="https://code.playcanvas.com/playcanvas-stable.min.js"></script>
+    <script>
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+            console.log('📝', message);
+        }
+        
+        // Get scene URL from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const sceneUrl = urlParams.get('scene') || '../multicam_build/2110491.json';
+        
+        console.log('🎬 Loading scene from:', sceneUrl);
+        updateStatus('Creating PlayCanvas app...');
+        
+        // Create PlayCanvas application
+        const canvas = document.getElementById('application-canvas');
+        const app = new pc.Application(canvas, {
+            mouse: new pc.Mouse(document.body),
+            touch: new pc.TouchDevice(document.body),
+            keyboard: new pc.Keyboard(window)
+        });
+        
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        
+        updateStatus('Starting PlayCanvas...');
+        app.start();
+        
+        // Load scene
+        updateStatus('Loading scene...');
+        app.loadSceneHierarchy(sceneUrl, (err) => {
+            if (err) {
+                console.error('❌ Scene loading failed:', err);
+                updateStatus('❌ Scene loading failed: ' + err.message);
+            } else {
+                console.log('✅ Scene loaded successfully');
+                updateStatus('✅ Scene loaded successfully');
+                
+                // Find and list all entities
+                setTimeout(() => {
+                    const allEntities = app.root.find(() => true);
+                    console.log(`📊 Found ${allEntities.length} entities in scene:`);
+                    allEntities.forEach((entity, index) => {
+                        const hasCamera = !!entity.camera;
+                        const hasLight = !!entity.light;
+                        const hasRender = !!entity.render;
+                        console.log(`  ${index}: ${entity.name} - Camera: ${hasCamera}, Light: ${hasLight}, Render: ${hasRender}`);
+                    });
+                    
+                    updateStatus(`✅ Scene ready - ${allEntities.length} entities loaded`);
+                }, 1000);
+            }
+        });
+        
+        // Basic mouse controls
+        let isDragging = false;
+        let lastX = 0, lastY = 0;
+        
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const camera = app.root.find(entity => entity.camera)[0];
+                if (camera) {
+                    const deltaX = e.clientX - lastX;
+                    const deltaY = e.clientY - lastY;
+                    
+                    // Simple orbit camera
+                    const distance = 10;
+                    const angleY = deltaX * 0.01;
+                    const angleX = deltaY * 0.01;
+                    
+                    const pos = camera.getPosition();
+                    const newX = pos.x * Math.cos(angleY) - pos.z * Math.sin(angleY);
+                    const newZ = pos.x * Math.sin(angleY) + pos.z * Math.cos(angleY);
+                    
+                    camera.setPosition(newX, pos.y, newZ);
+                    camera.lookAt(0, 0, 0);
+                }
+                
+                lastX = e.clientX;
+                lastY = e.clientY;
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        // Zoom with mouse wheel
+        canvas.addEventListener('wheel', (e) => {
+            const camera = app.root.find(entity => entity.camera)[0];
+            if (camera) {
+                const pos = camera.getPosition();
+                const distance = Math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
+                const newDistance = Math.max(5, Math.min(50, distance + e.deltaY * 0.01));
+                const scale = newDistance / distance;
+                camera.setPosition(pos.x * scale, pos.y * scale, pos.z * scale);
+            }
+        });
+        
+        console.log('🎮 Simple scene loader ready');
+    </script>
+</body>
+</html>

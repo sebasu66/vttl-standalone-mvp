@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>VTTL - Testing Multicam Scene</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .info {
+            background: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007acc;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #007acc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">
+        <h2>🎮 VTTL - Multicam Scene Test</h2>
+        <p><strong>Testing PlayCanvas Editor scene loading with the extracted multicam build.</strong></p>
+        <p>This multicam scene includes:</p>
+        <ul>
+            <li>Multiple camera systems (orbit, helicopter, fly camera)</li>
+            <li>3D medieval/fantasy assets (paladin, trees, cart)</li>
+            <li>Post-processing effects (SSAO, bloom, FXAA)</li>
+            <li>Physics system (Ammo.js)</li>
+            <li>High-quality terrain and environment</li>
+        </ul>
+        <p><strong>URL being tested:</strong></p>
+        <code>http://localhost:3001/client/index.html?mode=playcanvas_project&buildUrl=/2110491.json</code>
+        
+        <h4>🔍 Debug URLs to try:</h4>
+        <ul>
+            <li><a href="http://localhost:3001/client/index.html?mode=playcanvas_project&buildUrl=/2110491.json" target="_blank">Scene Hierarchy JSON</a></li>
+            <li><a href="http://localhost:3001/client/index.html?mode=standalone" target="_blank">Fallback Standalone Mode</a></li>
+            <li><a href="http://localhost:3001/index.html" target="_blank">Original Multicam Build</a></li>
+            <li><a href="http://localhost:3001/2110491.json" target="_blank">Direct Scene JSON</a></li>
+        </ul>
+    </div>
+    
+    <iframe src="http://localhost:3001/client/index.html?mode=playcanvas_project&buildUrl=/2110491.json" 
+            frameborder="0" allowfullscreen>
+        Your browser does not support iframes.
+    </iframe>
+    
+    <div class="info">
+        <h3>🧪 What to Test:</h3>
+        <ol>
+            <li>Check browser console for scene loading messages</li>
+            <li>Verify existing cameras from multicam are detected</li>
+            <li>Test mouse controls work with the loaded scene</li>
+            <li>Confirm API control still functions</li>
+        </ol>
+        
+        <h3>🔧 Expected Console Output:</h3>
+        <pre>
+Scene config loaded: {mode: "playcanvas_project", buildUrl: "../index.html", ...}
+Loading PlayCanvas Editor scene...
+Loading from build URL: ../index.html
+Scene loaded from build URL successfully
+Using existing camera from PlayCanvas scene
+Found X lights in PlayCanvas scene
+PlayCanvas Editor scene loaded successfully
+        </pre>
+    </div>
+</body>
+</html>

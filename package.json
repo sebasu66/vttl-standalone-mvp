@@ -1,0 +1,19 @@
+{
+  "name": "standalone-mvp",
+  "version": "1.0.0",
+  "description": "## Architecture",
+  "main": "__loading__.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "ws": "^8.18.3"
+  }
+}

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Single Model Test</title>
+    <style>
+        body { margin: 0; padding: 0; background: #222; font-family: Arial, sans-serif; }
+        #info { position: absolute; top: 10px; left: 10px; color: white; z-index: 1000; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h3>🧪 Single Model Loading Test</h3>
+        <div id="status">Loading...</div>
+    </div>
+    
+    <canvas id="application-canvas"></canvas>
+    
+    <script src="https://code.playcanvas.com/playcanvas-stable.min.js"></script>
+    <script>
+        console.log('🚀 Starting single model test...');
+        
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+            console.log('📝', message);
+        }
+        
+        // Create PlayCanvas application
+        const canvas = document.getElementById('application-canvas');
+        const app = new pc.Application(canvas, {
+            mouse: new pc.Mouse(document.body),
+            touch: new pc.TouchDevice(document.body)
+        });
+        
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        
+        updateStatus('PlayCanvas app created');
+        
+        // Create camera
+        const camera = new pc.Entity('camera');
+        camera.addComponent('camera', {
+            clearColor: new pc.Color(0.2, 0.2, 0.3),
+            fov: 60
+        });
+        camera.setPosition(0, 2, 5);
+        camera.lookAt(0, 0, 0);
+        app.root.addChild(camera);
+        
+        updateStatus('Camera created');
+        
+        // Create light
+        const light = new pc.Entity('light');
+        light.addComponent('light', {
+            type: 'directional',
+            color: new pc.Color(1, 1, 1),
+            intensity: 1
+        });
+        light.setEulerAngles(45, 30, 0);
+        app.root.addChild(light);
+        
+        updateStatus('Light created');
+        
+        // Add ambient light
+        app.scene.ambientLight = new pc.Color(0.3, 0.3, 0.3);
+        
+        // Create ground
+        const ground = new pc.Entity('ground');
+        ground.addComponent('render', { type: 'plane' });
+        const groundMaterial = new pc.StandardMaterial();
+        groundMaterial.diffuse = new pc.Color(0.5, 0.5, 0.5);
+        groundMaterial.update();
+        ground.render.material = groundMaterial;
+        ground.setLocalScale(10, 1, 10);
+        ground.setPosition(0, -1, 0);
+        app.root.addChild(ground);
+        
+        updateStatus('Ground created');
+        
+        // Start the app
+        app.start();
+        
+        updateStatus('App started, loading model...');
+        
+        // Load model
+        const modelPath = '/files/assets/204152025/1/paladin_man.glb';
+        
+        console.log('🔍 Testing model URL:', modelPath);
+        
+        // First test if URL is accessible
+        fetch(modelPath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                updateStatus('✅ Model URL accessible, loading...');
+                return loadModel(modelPath);
+            })
+            .catch(error => {
+                updateStatus('❌ Model URL not accessible: ' + error.message);
+                console.error('URL test failed:', error);
+                
+                // Try alternative paths
+                const alternatives = [
+                    '/paladin_man.glb',
+                    '/assets/paladin_man.glb',
+                    'paladin_man.glb'
+                ];
+                
+                console.log('🔄 Trying alternative paths:', alternatives);
+                updateStatus('Trying alternative paths...');
+                
+                tryAlternativePaths(alternatives, 0);
+            });
+        
+        function tryAlternativePaths(paths, index) {
+            if (index >= paths.length) {
+                updateStatus('❌ All model paths failed');
+                return;
+            }
+            
+            const path = paths[index];
+            console.log('🔍 Trying path:', path);
+            
+            fetch(path)
+                .then(response => {
+                    if (response.ok) {
+                        updateStatus('✅ Found model at: ' + path);
+                        return loadModel(path);
+                    } else {
+                        throw new Error('Not found');
+                    }
+                })
+                .catch(() => {
+                    tryAlternativePaths(paths, index + 1);
+                });
+        }
+        
+        function loadModel(modelPath) {
+            return new Promise((resolve, reject) => {
+                updateStatus('📦 Loading GLB asset...');
+                
+                app.assets.loadFromUrl(modelPath, 'container', (err, asset) => {
+                    if (err) {
+                        updateStatus('❌ Asset loading failed: ' + err.message);
+                        console.error('Asset loading error:', err);
+                        reject(err);
+                        return;
+                    }
+                    
+                    console.log('✅ Asset loaded:', asset);
+                    updateStatus('Asset loaded, creating entity...');
+                    
+                    // Wait for asset to be ready
+                    if (asset.resource) {
+                        createModelFromAsset(asset);
+                        resolve();
+                    } else {
+                        updateStatus('⏳ Waiting for asset resource...');
+                        asset.ready(() => {
+                            createModelFromAsset(asset);
+                            resolve();
+                        });
+                    }
+                });
+            });
+        }
+        
+        function createModelFromAsset(asset) {
+            try {
+                console.log('🔧 Asset resource:', asset.resource);
+                
+                // Method 1: Try instantiateRenderEntity
+                if (asset.resource && asset.resource.instantiateRenderEntity) {
+                    console.log('📋 Method 1: instantiateRenderEntity');
+                    const entity = asset.resource.instantiateRenderEntity();
+                    entity.setPosition(0, 0, 0);
+                    entity.setLocalScale(1, 1, 1);
+                    app.root.addChild(entity);
+                    updateStatus('✅ Model loaded via instantiateRenderEntity');
+                    return;
+                }
+                
+                // Method 2: Try creating entity manually
+                console.log('📋 Method 2: Manual entity creation');
+                const entity = new pc.Entity('model');
+                entity.addComponent('render', {
+                    type: 'asset',
+                    asset: asset
+                });
+                entity.setPosition(0, 0, 0);
+                entity.setLocalScale(1, 1, 1);
+                app.root.addChild(entity);
+                updateStatus('✅ Model loaded via manual creation');
+                
+            } catch (error) {
+                console.error('❌ Model creation failed:', error);
+                updateStatus('❌ Model creation failed: ' + error.message);
+                
+                // Fallback: Create a simple cube
+                console.log('🔄 Creating fallback cube...');
+                const cube = new pc.Entity('fallback');
+                cube.addComponent('render', { type: 'box' });
+                const material = new pc.StandardMaterial();
+                material.diffuse = new pc.Color(1, 0, 0);
+                material.update();
+                cube.render.material = material;
+                cube.setPosition(0, 0, 0);
+                app.root.addChild(cube);
+                updateStatus('🔴 Fallback cube created');
+            }
+        }
+        
+        // Mouse controls
+        let isRotating = false;
+        let lastX = 0, lastY = 0;
+        
+        canvas.addEventListener('mousedown', (e) => {
+            isRotating = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (isRotating) {
+                const deltaX = e.clientX - lastX;
+                const deltaY = e.clientY - lastY;
+                
+                const distance = 5;
+                const angleY = deltaX * 0.01;
+                const angleX = deltaY * 0.01;
+                
+                const pos = camera.getPosition();
+                const newX = pos.x * Math.cos(angleY) - pos.z * Math.sin(angleY);
+                const newZ = pos.x * Math.sin(angleY) + pos.z * Math.cos(angleY);
+                
+                camera.setPosition(newX, pos.y, newZ);
+                camera.lookAt(0, 0, 0);
+                
+                lastX = e.clientX;
+                lastY = e.clientY;
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isRotating = false;
+        });
+        
+        console.log('🎮 Single model test setup complete');
+    </script>
+</body>
+</html>
