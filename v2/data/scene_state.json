@@ -1,136 +1,803 @@
 {
   "version": "2.0.0",
-  "created": "2025-07-28T00:00:00.000Z",
-  "last_modified": "2025-07-28T00:00:00.000Z",
   "meta": {
-    "name": "Default VTTL Scene",
-    "description": "Clean virtual tabletop with large white table, proper lighting, and camera",
-    "creator": "VTTL v2.0",
-    "tags": ["default", "tabletop", "clean"]
-  },
-  "settings": {
-    "physics": {
-      "enabled": true,
-      "gravity": [0, -9.81, 0]
-    },
-    "lighting": {
-      "ambient": {
-        "color": [0.3, 0.3, 0.4],
-        "intensity": 0.6
-      },
-      "shadows": {
-        "enabled": true,
-        "type": "pcf3",
-        "resolution": 2048
-      }
-    },
-    "camera": {
-      "active": "MainCamera",
-      "controls": {
-        "enabled": true,
-        "type": "fly",
-        "constraints": {
-          "minHeight": 3.0,
-          "maxHeight": 20.0,
-          "boundary": 450.0
-        }
-      }
-    }
+    "name": "3D Models Showcase - WebGPU Clean",
+    "description": "Clean scene showcasing only 3D models with WebGPU rendering and shadows"
   },
   "cameras": {
-    "MainCamera": {
-      "name": "MainCamera",
-      "type": "perspective",
-      "position": [0, 12, 16.5],
-      "rotation": [-35, 0, 0],
+    "mainCamera": {
+      "position": [
+        0,
+        5,
+        6
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "fov": 65,
+      "clearColor": [
+        0.95,
+        0.95,
+        0.95,
+        1
+      ]
+    },
+    "showcase_camera": {
+      "position": [
+        6,
+        4,
+        0
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
       "fov": 60,
-      "nearClip": 0.1,
-      "farClip": 1000,
-      "clearColor": [0.95, 0.95, 0.95, 1.0],
-      "active": true
+      "clearColor": [
+        0.95,
+        0.95,
+        0.95,
+        1
+      ]
+    },
+    "overhead_camera": {
+      "position": [
+        0,
+        8,
+        0
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "fov": 70,
+      "clearColor": [
+        0.95,
+        0.95,
+        0.95,
+        1
+      ]
+    },
+    "wide_angle_camera": {
+      "position": [
+        12,
+        5,
+        12
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "fov": 75,
+      "clearColor": [
+        0.95,
+        0.95,
+        0.95,
+        1
+      ]
+    },
+    "close_up_camera": {
+      "position": [
+        3,
+        2,
+        3
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "fov": 60,
+      "clearColor": [
+        0.95,
+        0.95,
+        0.95,
+        1
+      ]
     }
   },
   "lights": {
-    "MainDirectionalLight": {
-      "name": "MainDirectionalLight",
+    "main_sun": {
       "type": "directional",
-      "position": [5, 15, 10],
-      "rotation": [45, -30, 0],
-      "color": [1.0, 0.95, 0.8],
-      "intensity": 2.0,
-      "castShadows": true,
-      "shadowBias": 0.02,
-      "shadowDistance": 50
-    },
-    "MainSpotLight": {
-      "name": "MainSpotLight",
-      "type": "spot",
-      "position": [-8, 12, 8],
-      "rotation": [60, 45, 0],
-      "color": [0.9, 0.9, 1.0],
+      "color": [
+        1,
+        0.95,
+        0.8
+      ],
       "intensity": 1.5,
-      "range": 25,
-      "innerConeAngle": 20,
-      "outerConeAngle": 45,
-      "castShadows": true,
-      "shadowBias": 0.02,
-      "shadowDistance": 50
-    }
-  },
-  "models": {
-    "GameTable": {
-      "name": "GameTable",
-      "type": "plane",
-      "position": [0, 0, 0],
-      "rotation": [0, 0, 0],
-      "scale": [400, 1, 400],
-      "color": [0.95, 0.95, 0.95],
-      "material": "standard",
-      "castShadows": false,
-      "receiveShadows": true,
-      "physics": {
-        "enabled": true,
-        "type": "static",
-        "collisionBox": {
-          "width": 400,
-          "height": 1,
-          "depth": 400
-        }
-      }
+      "direction": [
+        -0.5,
+        -1,
+        -0.3
+      ],
+      "castShadows": true
+    },
+    "fill_light": {
+      "type": "point",
+      "color": [
+        0.4,
+        0.5,
+        0.7
+      ],
+      "intensity": 0.8,
+      "position": [
+        5,
+        3,
+        5
+      ],
+      "range": 15,
+      "castShadows": false
+    },
+    "ambient_light": {
+      "type": "point",
+      "color": [
+        0.3,
+        0.3,
+        0.4
+      ],
+      "intensity": 0.3,
+      "position": [
+        0,
+        10,
+        0
+      ],
+      "range": 20,
+      "castShadows": false
+    },
+    "north_light": {
+      "type": "point",
+      "color": [
+        1,
+        1,
+        1
+      ],
+      "intensity": 1.2,
+      "position": [
+        0,
+        3,
+        5
+      ],
+      "range": 12,
+      "castShadows": true
+    },
+    "south_light": {
+      "type": "point",
+      "color": [
+        0.9,
+        0.9,
+        1
+      ],
+      "intensity": 1,
+      "position": [
+        0,
+        3,
+        -5
+      ],
+      "range": 12,
+      "castShadows": true
+    },
+    "east_light": {
+      "type": "point",
+      "color": [
+        1,
+        0.9,
+        0.8
+      ],
+      "intensity": 0.8,
+      "position": [
+        5,
+        3,
+        0
+      ],
+      "range": 12,
+      "castShadows": true
+    },
+    "west_light": {
+      "type": "point",
+      "color": [
+        0.8,
+        0.9,
+        1
+      ],
+      "intensity": 0.8,
+      "position": [
+        -5,
+        3,
+        0
+      ],
+      "range": 12,
+      "castShadows": true
     }
   },
   "entities": {
-    "demo_red_cube": {
-      "name": "demo_red_cube",
+    "ground_plane": {
       "type": "box",
-      "position": [-2, 0.5, -3],
-      "rotation": [0, 90, 0],
-      "scale": [1.2, 1.2, 1.2],
-      "color": [1.0, 0.0, 0.0],
-      "material": "standard",
-      "castShadows": true,
-      "receiveShadows": true,
-      "physics": {
-        "enabled": true,
-        "type": "dynamic",
-        "mass": 1.0
-      },
+      "position": [
+        0,
+        -0.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        20,
+        0.1,
+        20
+      ],
+      "color": [
+        0.9,
+        0.9,
+        0.9
+      ],
+      "material": {
+        "type": "standard",
+        "metalness": 0,
+        "roughness": 0.8,
+        "receiveShadows": true,
+        "castShadows": false
+      }
+    },
+    "cat_center": {
+      "type": "model",
+      "position": [
+        -3,
+        0.2,
+        3
+      ],
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "scale": [
+        1.5,
+        1.5,
+        1.5
+      ],
       "properties": {
-        "animatable": true,
-        "selectable": true,
-        "description": "Demo red cube for testing"
+        "model": "mini_cat.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "eagle_left": {
+      "type": "model",
+      "position": [
+        3,
+        0.1,
+        3
+      ],
+      "rotation": [
+        0,
+        135,
+        0
+      ],
+      "scale": [
+        1.2,
+        1.2,
+        1.2
+      ],
+      "properties": {
+        "model": "mini_eagle.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "bunny_right": {
+      "type": "model",
+      "position": [
+        -1,
+        0.1,
+        1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1.4,
+        1.4,
+        1.4
+      ],
+      "properties": {
+        "model": "miniature_bunny.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "wolf_back": {
+      "type": "model",
+      "position": [
+        0,
+        0.2,
+        -2
+      ],
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "scale": [
+        1.1,
+        1.1,
+        1.1
+      ],
+      "properties": {
+        "model": "miniature_wolf.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "forest_background": {
+      "type": "model",
+      "position": [
+        0,
+        0.3,
+        -6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        2,
+        2,
+        2
+      ],
+      "properties": {
+        "model": "scenery_forest.glb",
+        "castShadow": false,
+        "receiveShadow": true
+      }
+    },
+    "mini_cat_1": {
+      "type": "model",
+      "position": [
+        -2,
+        0.2,
+        3
+      ],
+      "rotation": [
+        0,
+        30,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "properties": {
+        "model": "mini_cat.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "mini_cat_2": {
+      "type": "model",
+      "position": [
+        -4,
+        0.2,
+        3
+      ],
+      "rotation": [
+        0,
+        60,
+        0
+      ],
+      "scale": [
+        1.2,
+        1.2,
+        1.2
+      ],
+      "properties": {
+        "model": "mini_cat.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "mini_eagle_1": {
+      "type": "model",
+      "position": [
+        2,
+        0.1,
+        3
+      ],
+      "rotation": [
+        0,
+        120,
+        0
+      ],
+      "scale": [
+        0.9,
+        0.9,
+        0.9
+      ],
+      "properties": {
+        "model": "mini_eagle.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "mini_eagle_2": {
+      "type": "model",
+      "position": [
+        4,
+        0.1,
+        3
+      ],
+      "rotation": [
+        0,
+        150,
+        0
+      ],
+      "scale": [
+        1.3,
+        1.3,
+        1.3
+      ],
+      "properties": {
+        "model": "mini_eagle.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "bunny_1": {
+      "type": "model",
+      "position": [
+        0,
+        0.1,
+        1
+      ],
+      "rotation": [
+        0,
+        30,
+        0
+      ],
+      "scale": [
+        1.1,
+        1.1,
+        1.1
+      ],
+      "properties": {
+        "model": "miniature_bunny.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "bunny_2": {
+      "type": "model",
+      "position": [
+        1,
+        0.1,
+        1
+      ],
+      "rotation": [
+        0,
+        60,
+        0
+      ],
+      "scale": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "properties": {
+        "model": "miniature_bunny.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "bunny_3": {
+      "type": "model",
+      "position": [
+        -2,
+        0.1,
+        1
+      ],
+      "rotation": [
+        0,
+        -30,
+        0
+      ],
+      "scale": [
+        1.2,
+        1.2,
+        1.2
+      ],
+      "properties": {
+        "model": "miniature_bunny.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "wolf_1": {
+      "type": "model",
+      "position": [
+        -1,
+        0.2,
+        -2
+      ],
+      "rotation": [
+        0,
+        210,
+        0
+      ],
+      "scale": [
+        1.4,
+        1.4,
+        1.4
+      ],
+      "properties": {
+        "model": "miniature_wolf.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "wolf_2": {
+      "type": "model",
+      "position": [
+        1,
+        0.2,
+        -2
+      ],
+      "rotation": [
+        0,
+        150,
+        0
+      ],
+      "scale": [
+        1.1,
+        1.1,
+        1.1
+      ],
+      "properties": {
+        "model": "miniature_wolf.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "wolf_3": {
+      "type": "model",
+      "position": [
+        -2,
+        0.2,
+        -2
+      ],
+      "rotation": [
+        0,
+        225,
+        0
+      ],
+      "scale": [
+        1.3,
+        1.3,
+        1.3
+      ],
+      "properties": {
+        "model": "miniature_wolf.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "mini_cat_3": {
+      "type": "model",
+      "position": [
+        -3,
+        0.2,
+        4
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.9,
+        0.9,
+        0.9
+      ],
+      "properties": {
+        "model": "mini_cat.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "mini_eagle_3": {
+      "type": "model",
+      "position": [
+        3,
+        0.1,
+        4
+      ],
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "scale": [
+        1.1,
+        1.1,
+        1.1
+      ],
+      "properties": {
+        "model": "mini_eagle.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "bunny_4": {
+      "type": "model",
+      "position": [
+        2,
+        0.1,
+        1
+      ],
+      "rotation": [
+        0,
+        90,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "properties": {
+        "model": "miniature_bunny.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "wolf_4": {
+      "type": "model",
+      "position": [
+        2,
+        0.2,
+        -2
+      ],
+      "rotation": [
+        0,
+        135,
+        0
+      ],
+      "scale": [
+        1.2,
+        1.2,
+        1.2
+      ],
+      "properties": {
+        "model": "miniature_wolf.glb",
+        "castShadow": true,
+        "receiveShadow": true
+      }
+    },
+    "forest_left": {
+      "type": "model",
+      "position": [
+        -7,
+        0.3,
+        -3
+      ],
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "scale": [
+        1.8,
+        1.8,
+        1.8
+      ],
+      "properties": {
+        "model": "scenery_forest.glb",
+        "castShadow": false,
+        "receiveShadow": true
+      }
+    },
+    "forest_right": {
+      "type": "model",
+      "position": [
+        7,
+        0.3,
+        2
+      ],
+      "rotation": [
+        0,
+        225,
+        0
+      ],
+      "scale": [
+        2.2,
+        2.2,
+        2.2
+      ],
+      "properties": {
+        "model": "scenery_forest.glb",
+        "castShadow": false,
+        "receiveShadow": true
+      }
+    },
+    "forest_center": {
+      "type": "model",
+      "position": [
+        0,
+        0.3,
+        -8
+      ],
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "scale": [
+        2.5,
+        2.5,
+        2.5
+      ],
+      "properties": {
+        "model": "scenery_forest.glb",
+        "castShadow": false,
+        "receiveShadow": true
       }
     }
   },
-  "grid": {
-    "enabled": true,
-    "size": 1.0,
-    "color": [0.8, 0.8, 0.8],
-    "opacity": 0.3,
-    "extent": [200, 200]
+  "settings": {
+    "rendering": {
+      "backend": "webgpu",
+      "msaa": {
+        "enabled": true,
+        "samples": 4
+      },
+      "hdr": {
+        "enabled": true,
+        "exposure": 1.2,
+        "gamma": 2.2
+      },
+      "skybox": {
+        "type": "solid",
+        "color": [
+          1,
+          1,
+          1
+        ],
+        "intensity": 1
+      }
+    },
+    "lighting": {
+      "ambient": {
+        "color": [
+          0.3,
+          0.3,
+          0.4
+        ],
+        "intensity": 0.3
+      },
+      "shadows": {
+        "enabled": true,
+        "type": "pcf",
+        "resolution": 4096,
+        "cascades": 4,
+        "distance": 40,
+        "fadeRange": 10,
+        "bias": 0.0001,
+        "normalBias": 0.02,
+        "softShadows": true,
+        "sampleRadius": 3,
+        "pcfKernel": 25
+      }
+    }
   },
-  "background": {
-    "type": "solid",
-    "color": [0.95, 0.95, 0.95]
-  }
+  "last_modified": "2025-07-28T15:05:54.282Z",
+  "models": {}
 }
