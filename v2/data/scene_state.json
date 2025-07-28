@@ -1,0 +1,136 @@
+{
+  "version": "2.0.0",
+  "created": "2025-07-28T00:00:00.000Z",
+  "last_modified": "2025-07-28T00:00:00.000Z",
+  "meta": {
+    "name": "Default VTTL Scene",
+    "description": "Clean virtual tabletop with large white table, proper lighting, and camera",
+    "creator": "VTTL v2.0",
+    "tags": ["default", "tabletop", "clean"]
+  },
+  "settings": {
+    "physics": {
+      "enabled": true,
+      "gravity": [0, -9.81, 0]
+    },
+    "lighting": {
+      "ambient": {
+        "color": [0.3, 0.3, 0.4],
+        "intensity": 0.6
+      },
+      "shadows": {
+        "enabled": true,
+        "type": "pcf3",
+        "resolution": 2048
+      }
+    },
+    "camera": {
+      "active": "MainCamera",
+      "controls": {
+        "enabled": true,
+        "type": "fly",
+        "constraints": {
+          "minHeight": 3.0,
+          "maxHeight": 20.0,
+          "boundary": 450.0
+        }
+      }
+    }
+  },
+  "cameras": {
+    "MainCamera": {
+      "name": "MainCamera",
+      "type": "perspective",
+      "position": [0, 12, 16.5],
+      "rotation": [-35, 0, 0],
+      "fov": 60,
+      "nearClip": 0.1,
+      "farClip": 1000,
+      "clearColor": [0.95, 0.95, 0.95, 1.0],
+      "active": true
+    }
+  },
+  "lights": {
+    "MainDirectionalLight": {
+      "name": "MainDirectionalLight",
+      "type": "directional",
+      "position": [5, 15, 10],
+      "rotation": [45, -30, 0],
+      "color": [1.0, 0.95, 0.8],
+      "intensity": 2.0,
+      "castShadows": true,
+      "shadowBias": 0.02,
+      "shadowDistance": 50
+    },
+    "MainSpotLight": {
+      "name": "MainSpotLight",
+      "type": "spot",
+      "position": [-8, 12, 8],
+      "rotation": [60, 45, 0],
+      "color": [0.9, 0.9, 1.0],
+      "intensity": 1.5,
+      "range": 25,
+      "innerConeAngle": 20,
+      "outerConeAngle": 45,
+      "castShadows": true,
+      "shadowBias": 0.02,
+      "shadowDistance": 50
+    }
+  },
+  "models": {
+    "GameTable": {
+      "name": "GameTable",
+      "type": "plane",
+      "position": [0, 0, 0],
+      "rotation": [0, 0, 0],
+      "scale": [400, 1, 400],
+      "color": [0.95, 0.95, 0.95],
+      "material": "standard",
+      "castShadows": false,
+      "receiveShadows": true,
+      "physics": {
+        "enabled": true,
+        "type": "static",
+        "collisionBox": {
+          "width": 400,
+          "height": 1,
+          "depth": 400
+        }
+      }
+    }
+  },
+  "entities": {
+    "demo_red_cube": {
+      "name": "demo_red_cube",
+      "type": "box",
+      "position": [-2, 0.5, -3],
+      "rotation": [0, 90, 0],
+      "scale": [1.2, 1.2, 1.2],
+      "color": [1.0, 0.0, 0.0],
+      "material": "standard",
+      "castShadows": true,
+      "receiveShadows": true,
+      "physics": {
+        "enabled": true,
+        "type": "dynamic",
+        "mass": 1.0
+      },
+      "properties": {
+        "animatable": true,
+        "selectable": true,
+        "description": "Demo red cube for testing"
+      }
+    }
+  },
+  "grid": {
+    "enabled": true,
+    "size": 1.0,
+    "color": [0.8, 0.8, 0.8],
+    "opacity": 0.3,
+    "extent": [200, 200]
+  },
+  "background": {
+    "type": "solid",
+    "color": [0.95, 0.95, 0.95]
+  }
+}

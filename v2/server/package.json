@@ -1,0 +1,27 @@
+{
+  "name": "vttl-v2-server",
+  "version": "2.0.0",
+  "description": "VTTL v2.0 Server - JSON-first virtual tabletop server",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "nodemon main.js",
+    "test": "jest"
+  },
+  "keywords": ["vttl", "virtual-tabletop", "3d", "websocket", "json"],
+  "author": "VTTL Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VTTL v2.0 - JSON-First Virtual Tabletop</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            overflow: hidden;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #playcanvas-app {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: #f0f0f0;
+        }
+        
+        #ui-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            max-width: 350px;
+        }
+        
+        #connection-status {
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .connected { color: #4CAF50; }
+        .disconnected { color: #f44336; }
+        .connecting { color: #ff9800; }
+        
+        #scene-info {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 999;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-connected { background: #4CAF50; }
+        .status-disconnected { background: #f44336; }
+        .status-connecting { background: #ff9800; animation: pulse 1s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        #version-info {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            background: #333;
+            color: white;
+            border: 1px solid #666;
+            padding: 8px 12px;
+            margin: 4px 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        button:hover {
+            background: #555;
+        }
+        
+        #debug-panel {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            max-width: 400px;
+        }
+        
+        #playcanvas-debug {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            max-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        #entity-hierarchy {
+            margin-top: 10px;
+        }
+        
+        .entity-debug-item {
+            margin: 2px 0;
+            padding: 3px 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .entity-debug-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .debug-header {
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        
+        .debug-toggle {
+            float: right;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="loading">
+            <h2>🎮 VTTL v2.0</h2>
+            <p>Loading JSON-First Virtual Tabletop...</p>
+            <div>Initializing PlayCanvas Engine...</div>
+        </div>
+        
+        <canvas id="playcanvas-app"></canvas>
+        
+        <div id="ui-overlay">
+            <div id="version-info">
+                VTTL v2.0 - JSON-First Architecture
+            </div>
+            <div id="connection-status" class="connecting">
+                <span class="status-indicator status-connecting"></span>
+                Connecting to server...
+            </div>
+            <div id="scene-info">
+                <strong>Scene Status:</strong> Loading...<br>
+                <span id="scene-details">Waiting for server...</span>
+            </div>
+            <div>
+                <button onclick="testConnection()">Test Connection</button>
+                <button onclick="requestScreenshot()">Screenshot</button>
+                <button onclick="reloadScene()">Reload Scene</button>
+                <button onclick="toggleDebugPanel()">Toggle Debug</button>
+                <button onclick="toggleWireframe()">Wireframe</button>
+            </div>
+        </div>
+        
+        <div id="playcanvas-debug">
+            <div class="debug-header" onclick="toggleDebugSection('entity-hierarchy')">
+                🏗️ Entity Hierarchy <span class="debug-toggle" id="hierarchy-toggle">▼</span>
+            </div>
+            <div id="entity-hierarchy"></div>
+            
+            <div class="debug-header" onclick="toggleDebugSection('performance-stats')" style="margin-top: 15px;">
+                📊 Performance <span class="debug-toggle" id="performance-toggle">▼</span>
+            </div>
+            <div id="performance-stats">FPS: 0 | Draw Calls: 0</div>
+            
+            <div class="debug-header" onclick="toggleDebugSection('gsap-info')" style="margin-top: 15px;">
+                🎭 GSAP Status <span class="debug-toggle" id="gsap-toggle">▼</span>
+            </div>
+            <div id="gsap-info">GSAP: Loading...</div>
+        </div>
+        
+        <div id="debug-panel">
+            <strong>Debug Info:</strong><br>
+            <div id="debug-info">
+                WebSocket: Not connected<br>
+                Last message: None<br>
+                Scene loaded: No
+            </div>
+        </div>
+    </div>
+
+    <!-- PlayCanvas Engine -->
+    <script src="https://code.playcanvas.com/playcanvas-stable.min.js"></script>
+    
+    <!-- GSAP for enhanced animations -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@latest/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@latest/dist/Flip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@latest/dist/Observer.min.js"></script>
+    
+    <script>
+        /**
+         * VTTL v2.0 Client - JSON-First Virtual Tabletop Client
+         * 
+         * Connects to VTTL v2.0 server and renders scenes from JSON state
+         * with GSAP-enhanced animations and automatic property detection.
+         */
+        
+        class VTTLClient {
+            constructor() {
+                this.version = '2.0.0';
+                this.ws = null;
+                this.isConnected = false;
+                this.app = null;
+                this.scene = null;
+                this.entities = new Map();
+                this.lastMessage = null;
+                this.gsapAnimator = null;
+                this.debugPanelVisible = true;
+                this.performanceStats = { fps: 0, drawCalls: 0 };
+                this.lastFrameTime = performance.now();
+                this.frameCount = 0;
+                
+                console.log(`🎮 VTTL v${this.version} Client initializing...`);
+                this.initialize();
+            }
+            
+            async initialize() {
+                try {
+                    await this.initializePlayCanvas();
+                    this.initializeGSAP();
+                    this.connectWebSocket();
+                    this.startDebugUpdates();
+                    this.hideLoading();
+                    console.log('✅ VTTL Client ready');
+                } catch (error) {
+                    console.error('❌ Client initialization failed:', error);
+                    this.showError('Failed to initialize client: ' + error.message);
+                }
+            }
+            
+            async initializePlayCanvas() {
+                const canvas = document.getElementById('playcanvas-app');
+                
+                this.app = new pc.Application(canvas, {
+                    mouse: new pc.Mouse(canvas),
+                    touch: new pc.TouchDevice(canvas),
+                    keyboard: new pc.Keyboard(window),
+                    gamepads: new pc.GamePads()
+                });
+                
+                // Configure app
+                this.app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+                this.app.setCanvasResolution(pc.RESOLUTION_AUTO);
+                
+                // Enable advanced debugging in development
+                if (window.location.hostname === 'localhost') {
+                    // Enable PlayCanvas built-in stats
+                    this.app.stats.enabled = true;
+                    
+                    // Enable debug rendering (wireframes, bounds, etc.)
+                    this.app.scene.drawWireframe = false; // Can be toggled later
+                    
+                    console.log('🔧 PlayCanvas Debug Mode: ENABLED');
+                    console.log('📊 Performance monitoring ready');
+                    console.log('🎮 Debug features ready');
+                }
+                
+                // Start the application
+                this.app.start();
+                
+                console.log('✅ PlayCanvas initialized');
+            }
+            
+            initializeGSAP() {
+                if (typeof gsap !== 'undefined' && typeof Flip !== 'undefined' && typeof Observer !== 'undefined') {
+                    // Register GSAP plugins
+                    gsap.registerPlugin(Flip, Observer);
+                    
+                    // Create GSAP animation manager
+                    this.gsapAnimator = new GSAPAnimator(this);
+                    
+                    console.log('✅ GSAP initialized with Flip and Observer plugins');
+                    this.updateGSAPStatus('GSAP Ready - Flip + Observer loaded');
+                } else {
+                    console.warn('⚠️ GSAP plugins not fully loaded');
+                    this.updateGSAPStatus('GSAP Loading...');
+                }
+            }
+            
+            connectWebSocket() {
+                const wsUrl = `ws://${window.location.hostname}:8082`;
+                console.log(`🔌 Connecting to ${wsUrl}...`);
+                
+                this.ws = new WebSocket(wsUrl);
+                
+                this.ws.onopen = () => {
+                    console.log('✅ WebSocket connected');
+                    this.isConnected = true;
+                    this.updateConnectionStatus('connected');
+                    this.updateDebugInfo();
+                };
+                
+                this.ws.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        this.handleServerMessage(message);
+                    } catch (error) {
+                        console.error('❌ Failed to parse server message:', error);
+                    }
+                };
+                
+                this.ws.onclose = () => {
+                    console.log('🔌 WebSocket disconnected');
+                    this.isConnected = false;
+                    this.updateConnectionStatus('disconnected');
+                    this.updateDebugInfo();
+                    
+                    // Attempt reconnection
+                    setTimeout(() => this.connectWebSocket(), 3000);
+                };
+                
+                this.ws.onerror = (error) => {
+                    console.error('❌ WebSocket error:', error);
+                    this.updateConnectionStatus('disconnected');
+                };
+            }
+            
+            handleServerMessage(message) {
+                this.lastMessage = message;
+                this.updateDebugInfo();
+                
+                const { type, data } = message;
+                
+                switch (type) {
+                    case 'initial_scene':
+                    case 'scene_data':
+                        console.log('📋 Received scene data');
+                        this.loadScene(data);
+                        break;
+                        
+                    case 'scene_update':
+                        console.log('🔄 Scene update received');
+                        // TODO: Implement diff-based updates in Checkpoint 2
+                        this.loadScene(data);
+                        break;
+                        
+                    case 'screenshot_request':
+                        console.log('📸 Screenshot requested');
+                        this.takeScreenshot();
+                        break;
+                        
+                    case 'pong':
+                        console.log('🏓 Pong received');
+                        break;
+                        
+                    case 'error':
+                        console.error('❌ Server error:', message.message);
+                        break;
+                        
+                    default:
+                        console.log('❓ Unknown message type:', type);
+                }
+            }
+            
+            loadScene(sceneData) {
+                if (!sceneData) {
+                    console.error('❌ No scene data provided');
+                    return;
+                }
+                
+                console.log('🎬 Loading scene:', sceneData.meta?.name || 'Unknown');
+                this.scene = sceneData;
+                
+                // Clear existing scene
+                if (this.app.root) {
+                    this.app.root.children.slice().forEach(child => {
+                        if (child.name !== 'camera') {
+                            child.destroy();
+                        }
+                    });
+                }
+                
+                // Load scene components
+                this.loadCameras(sceneData.cameras || {});
+                this.loadLights(sceneData.lights || {});
+                this.loadModels(sceneData.models || {});
+                this.loadEntities(sceneData.entities || {});
+                this.applySettings(sceneData.settings || {});
+                
+                this.updateSceneInfo();
+                console.log('✅ Scene loaded successfully');
+            }
+            
+            loadCameras(cameras) {
+                Object.entries(cameras).forEach(([name, camera]) => {
+                    if (camera.active) {
+                        const cameraEntity = new pc.Entity(name);
+                        
+                        cameraEntity.addComponent('camera', {
+                            type: camera.type || 'perspective',
+                            fov: camera.fov || 60,
+                            nearClip: camera.nearClip || 0.1,
+                            farClip: camera.farClip || 1000,
+                            clearColor: new pc.Color(...(camera.clearColor || [0.95, 0.95, 0.95, 1.0]))
+                        });
+                        
+                        cameraEntity.setPosition(...camera.position);
+                        cameraEntity.setEulerAngles(...camera.rotation);
+                        
+                        this.app.root.addChild(cameraEntity);
+                        console.log(`📹 Camera created: ${name}`);
+                    }
+                });
+            }
+            
+            loadLights(lights) {
+                Object.entries(lights).forEach(([name, light]) => {
+                    const lightEntity = new pc.Entity(name);
+                    
+                    lightEntity.addComponent('light', {
+                        type: light.type,
+                        color: new pc.Color(...light.color),
+                        intensity: light.intensity,
+                        castShadows: light.castShadows || false,
+                        range: light.range,
+                        innerConeAngle: light.innerConeAngle,
+                        outerConeAngle: light.outerConeAngle
+                    });
+                    
+                    lightEntity.setPosition(...light.position);
+                    lightEntity.setEulerAngles(...light.rotation);
+                    
+                    this.app.root.addChild(lightEntity);
+                    console.log(`💡 Light created: ${name} (${light.type})`);
+                });
+            }
+            
+            loadModels(models) {
+                Object.entries(models).forEach(([name, model]) => {
+                    this.createModelEntity(name, model);
+                });
+            }
+            
+            loadEntities(entities) {
+                Object.entries(entities).forEach(([name, entity]) => {
+                    this.createModelEntity(name, entity);
+                });
+            }
+            
+            createModelEntity(name, data) {
+                const entity = new pc.Entity(name);
+                
+                // Add render component
+                entity.addComponent('render', {
+                    type: data.type || 'box'
+                });
+                
+                // Create material
+                const material = new pc.StandardMaterial();
+                if (data.color) {
+                    material.diffuse = new pc.Color(...data.color);
+                }
+                material.update();
+                entity.render.material = material;
+                
+                // Set transform
+                entity.setPosition(...(data.position || [0, 0, 0]));
+                entity.setEulerAngles(...(data.rotation || [0, 0, 0]));
+                entity.setLocalScale(...(data.scale || [1, 1, 1]));
+                
+                // Add physics if enabled
+                if (data.physics?.enabled) {
+                    entity.addComponent('collision', { type: 'box' });
+                    if (data.physics.type !== 'static') {
+                        entity.addComponent('rigidbody', {
+                            type: data.physics.type,
+                            mass: data.physics.mass || 1
+                        });
+                    }
+                }
+                
+                this.app.root.addChild(entity);
+                this.entities.set(name, entity);
+                
+                console.log(`🎯 Entity created: ${name} (${data.type || 'box'})`);
+            }
+            
+            applySettings(settings) {
+                if (settings.lighting?.ambient) {
+                    const ambient = settings.lighting.ambient;
+                    this.app.scene.ambientLight = new pc.Color(
+                        ambient.color[0] * ambient.intensity,
+                        ambient.color[1] * ambient.intensity,
+                        ambient.color[2] * ambient.intensity
+                    );
+                }
+                
+                if (settings.lighting?.shadows?.enabled) {
+                    this.app.scene.shadowsEnabled = true;
+                }
+            }
+            
+            updateConnectionStatus(status) {
+                const statusEl = document.getElementById('connection-status');
+                const indicator = statusEl.querySelector('.status-indicator');
+                
+                statusEl.className = status;
+                indicator.className = `status-indicator status-${status}`;
+                
+                switch (status) {
+                    case 'connected':
+                        statusEl.innerHTML = '<span class="status-indicator status-connected"></span>Connected to server';
+                        break;
+                    case 'disconnected':
+                        statusEl.innerHTML = '<span class="status-indicator status-disconnected"></span>Disconnected from server';
+                        break;
+                    case 'connecting':
+                        statusEl.innerHTML = '<span class="status-indicator status-connecting"></span>Connecting to server...';
+                        break;
+                }
+            }
+            
+            updateSceneInfo() {
+                if (!this.scene) return;
+                
+                const detailsEl = document.getElementById('scene-details');
+                detailsEl.innerHTML = `
+                    <strong>${this.scene.meta?.name || 'Unknown Scene'}</strong><br>
+                    Version: ${this.scene.version}<br>
+                    Entities: ${Object.keys(this.scene.entities || {}).length}<br>
+                    Models: ${Object.keys(this.scene.models || {}).length}<br>
+                    Lights: ${Object.keys(this.scene.lights || {}).length}<br>
+                    Cameras: ${Object.keys(this.scene.cameras || {}).length}
+                `;
+            }
+            
+            updateDebugInfo() {
+                const debugEl = document.getElementById('debug-info');
+                debugEl.innerHTML = `
+                    WebSocket: ${this.isConnected ? 'Connected' : 'Disconnected'}<br>
+                    Last message: ${this.lastMessage ? this.lastMessage.type : 'None'}<br>
+                    Scene loaded: ${this.scene ? 'Yes' : 'No'}<br>
+                    Entities: ${this.entities.size}
+                `;
+            }
+            
+            sendMessage(type, payload = {}) {
+                if (this.isConnected && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify({ type, payload }));
+                } else {
+                    console.warn('❌ Cannot send message: WebSocket not connected');
+                }
+            }
+            
+            takeScreenshot() {
+                if (this.app?.graphicsDevice) {
+                    try {
+                        this.app.render();
+                        const canvas = this.app.graphicsDevice.canvas;
+                        const dataURL = canvas.toDataURL('image/png');
+                        console.log('📸 Screenshot captured');
+                        
+                        // TODO: Send to server for AI analysis
+                        // this.sendMessage('screenshot', { image: dataURL });
+                        
+                        return dataURL;
+                    } catch (error) {
+                        console.error('❌ Screenshot failed:', error);
+                    }
+                }
+                return null;
+            }
+            
+            hideLoading() {
+                const loading = document.getElementById('loading');
+                if (loading) {
+                    loading.style.display = 'none';
+                }
+            }
+            
+            showError(message) {
+                const loading = document.getElementById('loading');
+                if (loading) {
+                    loading.innerHTML = `
+                        <h2>❌ Error</h2>
+                        <p>${message}</p>
+                        <button onclick="window.location.reload()">Reload</button>
+                    `;
+                }
+            }
+            
+            startDebugUpdates() {
+                // Update debug panels less frequently to improve performance
+                setInterval(() => {
+                    this.updateEntityHierarchy();
+                    this.updatePerformanceStats();
+                }, 1000); // Reduced from 500ms to 1000ms
+            }
+            
+            updateEntityHierarchy() {
+                const hierarchyEl = document.getElementById('entity-hierarchy');
+                if (!hierarchyEl || !this.app?.root) return;
+                
+                let html = '';
+                this.app.root.children.forEach(child => {
+                    const pos = child.getPosition();
+                    const rot = child.getEulerAngles();
+                    html += `<div class="entity-debug-item" onclick="selectEntity('${child.name}')">
+                        <strong>${child.name}</strong><br>
+                        Pos: [${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}]<br>
+                        Rot: [${rot.x.toFixed(0)}°, ${rot.y.toFixed(0)}°, ${rot.z.toFixed(0)}°]
+                    </div>`;
+                });
+                
+                hierarchyEl.innerHTML = html || 'No entities';
+            }
+            
+            updatePerformanceStats() {
+                if (this.app) {
+                    // Use PlayCanvas built-in stats for accurate FPS
+                    const stats = this.app.stats;
+                    if (stats) {
+                        this.performanceStats.fps = Math.round(stats.frame.fps || 60);
+                        this.performanceStats.drawCalls = stats.drawCalls?.value || 0;
+                    } else {
+                        // Fallback calculation
+                        const now = performance.now();
+                        if (this.lastFrameTime > 0) {
+                            const deltaTime = now - this.lastFrameTime;
+                            this.performanceStats.fps = Math.round(1000 / deltaTime);
+                        }
+                        this.lastFrameTime = now;
+                    }
+                    
+                    const statsEl = document.getElementById('performance-stats');
+                    if (statsEl) {
+                        statsEl.innerHTML = `FPS: ${this.performanceStats.fps} | Draw Calls: ${this.performanceStats.drawCalls}`;
+                    }
+                }
+            }
+            
+            updateGSAPStatus(status) {
+                const gsapEl = document.getElementById('gsap-info');
+                if (gsapEl) {
+                    gsapEl.innerHTML = status;
+                }
+            }
+        }
+        
+        /**
+         * GSAP Animation Manager - Handles automatic animation detection and smooth transitions
+         */
+        class GSAPAnimator {
+            constructor(client) {
+                this.client = client;
+                this.entityStates = new Map();
+                this.activeAnimations = new Map();
+                this.observer = null;
+                
+                this.initializeObserver();
+                console.log('🎭 GSAP Animator initialized');
+            }
+            
+            initializeObserver() {
+                // Set up GSAP Observer for specific interactions only (no mouse movement)
+                this.observer = Observer.create({
+                    target: this.client.app?.graphicsDevice?.canvas,
+                    type: "wheel,touch", // Removed pointer to avoid mouse movement
+                    onWheel: (self) => {
+                        // Handle camera zoom or rotation
+                        console.log('Observer: Wheel interaction', self.deltaY);
+                    },
+                    onTouch: (self) => {
+                        // Handle touch interactions for mobile
+                        console.log('Observer: Touch interaction');
+                    }
+                });
+                
+                console.log('👁️ GSAP Observer monitoring wheel and touch only');
+            }
+            
+            /**
+             * Enhanced entity update with automatic animation detection
+             */
+            updateEntity(entityName, oldState, newState, options = {}) {
+                const { animate = true, duration = 0.5 } = options;
+                
+                if (!animate) {
+                    this.applyInstantUpdate(entityName, newState);
+                    return;
+                }
+                
+                // Separate animatable vs non-animatable properties
+                const changes = this.categorizeChanges(oldState, newState);
+                
+                if (changes.animatable.length > 0) {
+                    this.animateChanges(entityName, changes.animatable, duration);
+                }
+                
+                if (changes.instant.length > 0) {
+                    this.applyInstantChanges(entityName, changes.instant);
+                }
+                
+                // Store new state
+                this.entityStates.set(entityName, { ...newState });
+                
+                console.log(`🎭 Entity ${entityName} updated: ${changes.animatable.length} animated, ${changes.instant.length} instant`);
+            }
+            
+            categorizeChanges(oldState, newState) {
+                const animatable = [];
+                const instant = [];
+                
+                // Define which properties can be animated smoothly
+                const animatableProps = ['position', 'rotation', 'scale', 'color', 'opacity'];
+                const instantProps = ['visible', 'enabled', 'texture', 'material', 'type'];
+                
+                Object.keys(newState).forEach(prop => {
+                    if (animatableProps.includes(prop)) {
+                        animatable.push({ prop, value: newState[prop] });
+                    } else if (instantProps.includes(prop)) {
+                        instant.push({ prop, value: newState[prop] });
+                    }
+                });
+                
+                return { animatable, instant };
+            }
+            
+            animateChanges(entityName, changes, duration) {
+                const entity = this.client.entities.get(entityName);
+                if (!entity) return;
+                
+                // Store current state for animation
+                const currentState = {
+                    position: entity.getPosition().clone(),
+                    rotation: entity.getEulerAngles().clone(),
+                    scale: entity.getLocalScale().clone()
+                };
+                
+                // Create animation targets
+                const targets = {};
+                changes.forEach(({ prop, value }) => {
+                    switch (prop) {
+                        case 'position':
+                            targets.position = { x: value[0], y: value[1], z: value[2] };
+                            break;
+                        case 'rotation':
+                            targets.rotation = { x: value[0], y: value[1], z: value[2] };
+                            break;
+                        case 'scale':
+                            targets.scale = { x: value[0], y: value[1], z: value[2] };
+                            break;
+                        case 'color':
+                            targets.color = { r: value[0], g: value[1], b: value[2] };
+                            break;
+                    }
+                });
+                
+                // Use GSAP to animate the 3D properties directly
+                const animation = gsap.to(currentState, {
+                    duration: duration,
+                    ease: "power2.out",
+                    ...targets,
+                    onUpdate: () => {
+                        // Apply animated values to PlayCanvas entity
+                        if (targets.position) {
+                            entity.setPosition(currentState.position.x, currentState.position.y, currentState.position.z);
+                        }
+                        if (targets.rotation) {
+                            entity.setEulerAngles(currentState.rotation.x, currentState.rotation.y, currentState.rotation.z);
+                        }
+                        if (targets.scale) {
+                            entity.setLocalScale(currentState.scale.x, currentState.scale.y, currentState.scale.z);
+                        }
+                        if (targets.color && entity.render?.material) {
+                            entity.render.material.diffuse.set(currentState.color.r, currentState.color.g, currentState.color.b);
+                            entity.render.material.update();
+                        }
+                        
+                        // PlayCanvas will render automatically, no need to force
+                    },
+                    onComplete: () => {
+                        console.log(`✅ Animation complete: ${entityName}`);
+                        this.activeAnimations.delete(entityName);
+                        this.client.updateGSAPStatus(`GSAP Ready - ${this.activeAnimations.size} active animations`);
+                    }
+                });
+                
+                this.activeAnimations.set(entityName, animation);
+                
+                // Update GSAP status
+                this.client.updateGSAPStatus(`Animating: ${this.activeAnimations.size} entities`);
+            }
+            
+            applyPropertyChange(entity, prop, value) {
+                switch (prop) {
+                    case 'position':
+                        entity.setPosition(value[0], value[1], value[2]);
+                        break;
+                    case 'rotation':
+                        entity.setEulerAngles(value[0], value[1], value[2]);
+                        break;
+                    case 'scale':
+                        entity.setLocalScale(value[0], value[1], value[2]);
+                        break;
+                    case 'color':
+                        if (entity.render?.material) {
+                            entity.render.material.diffuse = new pc.Color(value[0], value[1], value[2]);
+                            entity.render.material.update();
+                        }
+                        break;
+                    case 'opacity':
+                        if (entity.render?.material) {
+                            entity.render.material.opacity = value;
+                            entity.render.material.update();
+                        }
+                        break;
+                }
+            }
+            
+            applyInstantChanges(entityName, changes) {
+                const entity = this.client.entities.get(entityName);
+                if (!entity) return;
+                
+                changes.forEach(({ prop, value }) => {
+                    switch (prop) {
+                        case 'visible':
+                        case 'enabled':
+                            entity.enabled = value;
+                            break;
+                        // Add more instant property handlers
+                    }
+                });
+            }
+            
+            applyInstantUpdate(entityName, state) {
+                const entity = this.client.entities.get(entityName);
+                if (!entity) return;
+                
+                Object.keys(state).forEach(prop => {
+                    this.applyPropertyChange(entity, prop, state[prop]);
+                });
+                
+                this.entityStates.set(entityName, { ...state });
+            }
+        }
+        
+        // Global functions for UI
+        function testConnection() {
+            if (window.vttlClient) {
+                window.vttlClient.sendMessage('ping');
+                console.log('🏓 Ping sent');
+            }
+        }
+        
+        function requestScreenshot() {
+            if (window.vttlClient) {
+                const screenshot = window.vttlClient.takeScreenshot();
+                if (screenshot) {
+                    // Create download link
+                    const link = document.createElement('a');
+                    link.download = 'vttl-screenshot.png';
+                    link.href = screenshot;
+                    link.click();
+                }
+            }
+        }
+        
+        function reloadScene() {
+            if (window.vttlClient) {
+                window.vttlClient.sendMessage('get_scene');
+                console.log('🔄 Scene reload requested');
+            }
+        }
+        
+        function toggleDebugPanel() {
+            const panel = document.getElementById('playcanvas-debug');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                console.log('🔧 Debug panel shown');
+            } else {
+                panel.style.display = 'none';
+                console.log('🔧 Debug panel hidden');
+            }
+        }
+        
+        function toggleDebugSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const toggle = document.getElementById(sectionId.replace('-', '-') + '-toggle');
+            
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                toggle.textContent = '▼';
+            } else {
+                section.style.display = 'none';
+                toggle.textContent = '▶';
+            }
+        }
+        
+        function selectEntity(entityName) {
+            console.log(`🎯 Selected entity: ${entityName}`);
+        }
+        
+        function toggleWireframe() {
+            if (window.vttlClient?.app) {
+                const app = window.vttlClient.app;
+                app.scene.drawWireframe = !app.scene.drawWireframe;
+                console.log(`🔧 Wireframe mode: ${app.scene.drawWireframe ? 'ON' : 'OFF'}`);
+            }
+        }
+        
+        // Initialize client
+        document.addEventListener('DOMContentLoaded', () => {
+            window.vttlClient = new VTTLClient();
+        });
+        
+        // Register GSAP plugins for future use
+        if (typeof gsap !== 'undefined' && typeof Flip !== 'undefined' && typeof Observer !== 'undefined') {
+            gsap.registerPlugin(Flip, Observer);
+            console.log('✅ GSAP with Flip and Observer plugins registered');
+        }
+    </script>
+</body>
+</html>
